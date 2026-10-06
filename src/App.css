@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+/* Any custom styles or variables go BELOW the import */
+:root {
+  --code-bg: #0d1117;
+}
+
+/* Rest of your CSS rules below... */
