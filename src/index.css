@@ -1,1 +1,12 @@
 @import "tailwindcss";
+@layer base {
+  @media (max-width: 768px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+}

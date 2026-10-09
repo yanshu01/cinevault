@@ -6,3 +6,14 @@
 }
 
 /* Rest of your CSS rules below... */
+@layer base {
+  @media (max-width: 768px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+}

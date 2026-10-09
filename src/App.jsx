@@ -1,124 +1,40 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
-  Search, Film, Bookmark, Star, ExternalLink, Plus, Trash2, 
-  CheckCircle, Clock, Heart, Filter, FolderPlus, Key, AlertCircle, 
-  Eye, Play, X, SlidersHorizontal, Cloud, RefreshCw, ArrowUpDown, 
-  Flame, Check, LogIn, LogOut, User, Mail, Lock, Calendar, Film as MovieIcon
+  Check, 
+  RefreshCw, 
+  Search, 
+  Star, 
+  ExternalLink, 
+  Bookmark, 
+  Plus, 
+  Trash2 
 } from 'lucide-react';
 
-import { initializeApp, getApps, getApp } from 'firebase/app';
 import { 
-  getAuth, 
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  updateProfile,
-  signOut,
-  onAuthStateChanged 
-} from 'firebase/auth';
-import { 
-  getFirestore, 
+  auth, 
+  db, 
+  isDemoFirebase, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  updateProfile, 
+  signOut, 
+  onAuthStateChanged, 
   collection, 
   doc, 
   setDoc, 
   deleteDoc, 
   onSnapshot 
-} from 'firebase/firestore';
+} from './firebase';
 
-// ---------------- Firebase Configuration ----------------
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "demo-api-key",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "cinevault-demo.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "cinevault-demo",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "cinevault-demo.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1234567890",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1234567890:web:abcdef123456"
-};
+import { PRELOADED_MOVIES, DEFAULT_ALBUMS } from './data/preloadedMovies';
 
-const isDemoFirebase = firebaseConfig.apiKey === "demo-api-key";
-
-let app, auth, db;
-try {
-  app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app);
-} catch (e) {
-  console.warn("Firebase local fallback mode active:", e);
-}
-
-const PRELOADED_MOVIES = [
-  {
-    id: "tt2995365",
-    title: "Dhurandhar",
-    year: "2025",
-    genre: ["Action", "Thriller", "Crime"],
-    director: "Aditya Dhar",
-    cast: "Ranveer Singh, Sanjay Dutt, R. Madhavan, Akshaye Khanna, Arjun Rampal",
-    plot: "A high-stakes covert operative mission based on real-world geopolitics and intense intelligence operations.",
-    poster: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop&q=80",
-    imdbRating: "8.4",
-    rottenTomatoes: "89%",
-    origin: "Bollywood",
-    runtime: "165 min"
-  },
-  {
-    id: "tt15398776",
-    title: "Oppenheimer",
-    year: "2023",
-    genre: ["Biography", "Drama", "History"],
-    director: "Christopher Nolan",
-    cast: "Cillian Murphy, Emily Blunt, Matt Damon, Robert Downey Jr.",
-    plot: "The story of American scientist J. Robert Oppenheimer and his role in the Manhattan Project.",
-    poster: "https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=600&auto=format&fit=crop&q=80",
-    imdbRating: "8.9",
-    rottenTomatoes: "93%",
-    origin: "Hollywood",
-    runtime: "180 min"
-  },
-  {
-    id: "tt1160419",
-    title: "Dune: Part Two",
-    year: "2024",
-    genre: ["Action", "Adventure", "Sci-Fi"],
-    director: "Denis Villeneuve",
-    cast: "Timothée Chalamet, Zendaya, Rebecca Ferguson, Javier Bardem",
-    plot: "Paul Atreides unites with Chani and the Fremen while seeking revenge against conspirators.",
-    poster: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80",
-    imdbRating: "8.6",
-    rottenTomatoes: "92%",
-    origin: "Canadian",
-    runtime: "166 min"
-  },
-  {
-    id: "tt15354916",
-    title: "Jawan",
-    year: "2023",
-    genre: ["Action", "Thriller"],
-    director: "Atlee",
-    cast: "Shah Rukh Khan, Nayanthara, Vijay Sethupathi, Deepika Padukone",
-    plot: "A high-octane action thriller of a prison warden committed to rectifying the evils in society.",
-    poster: "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?w=600&auto=format&fit=crop&q=80",
-    imdbRating: "7.0",
-    rottenTomatoes: "88%",
-    origin: "Bollywood",
-    runtime: "169 min"
-  },
-  {
-    id: "tt0816692",
-    title: "Interstellar",
-    year: "2014",
-    genre: ["Adventure", "Drama", "Sci-Fi"],
-    director: "Christopher Nolan",
-    cast: "Matthew McConaughey, Anne Hathaway, Jessica Chastain",
-    plot: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.",
-    poster: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=80",
-    imdbRating: "8.7",
-    rottenTomatoes: "73%",
-    origin: "British",
-    runtime: "169 min"
-  }
-];
-
-const DEFAULT_ALBUMS = ['Weekend Binge', 'Masterpieces', 'Must Watch', 'Action Blast'];
+import Navbar from './components/layout/Navbar';
+import MobileNav from './components/layout/MobileNav';
+import AuthScreen from './components/modals/AuthScreen';
+import AccountModal from './components/modals/AccountModal';
+import MovieInspectModal from './components/modals/MovieInspectModal';
+import ApiKeyModal from './components/modals/ApiKeyModal';
+import NewShelfModal from './components/modals/NewShelfModal';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -484,108 +400,20 @@ export default function App() {
   // ---------------- GATEKEEPER: LOGIN / SIGNUP SCREEN ----------------
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#07090f] text-slate-100 flex flex-col justify-center items-center px-4 py-8">
-        <div className="w-full max-w-sm space-y-6">
-          <div className="text-center space-y-2">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-400 via-rose-500 to-indigo-600 flex items-center justify-center shadow-xl shadow-amber-500/20 mx-auto">
-              <Film className="w-7 h-7 text-black stroke-[2.5]" />
-            </div>
-            <h1 className="text-2xl font-black tracking-tight bg-gradient-to-r from-amber-200 via-rose-200 to-indigo-200 bg-clip-text text-transparent">
-              CineVault
-            </h1>
-            <p className="text-xs text-slate-400">
-              Create your movie albums & track cinema in real-time.
-            </p>
-          </div>
-
-          <div className="bg-[#0f1426] border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5">
-            <div className="flex rounded-xl bg-slate-950 p-1 border border-slate-800 text-xs font-semibold">
-              <button
-                type="button"
-                onClick={() => { setAuthMode('login'); setAuthError(''); }}
-                className={`flex-1 py-2 rounded-lg transition ${authMode === 'login' ? 'bg-amber-400 text-black shadow' : 'text-slate-400'}`}
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                onClick={() => { setAuthMode('signup'); setAuthError(''); }}
-                className={`flex-1 py-2 rounded-lg transition ${authMode === 'signup' ? 'bg-amber-400 text-black shadow' : 'text-slate-400'}`}
-              >
-                Sign Up
-              </button>
-            </div>
-
-            {authError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center space-x-1.5">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{authError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleAuthSubmit} className="space-y-3.5">
-              {authMode === 'signup' && (
-                <div>
-                  <label className="text-[11px] text-slate-400 font-medium block mb-1">Your Full Name:</label>
-                  <div className="relative">
-                    <User className="w-4 h-4 absolute left-3.5 top-3 text-slate-500" />
-                    <input
-                      type="text"
-                      required
-                      value={authName}
-                      onChange={(e) => setAuthName(e.target.value)}
-                      placeholder="e.g. Alex Sharma"
-                      className="w-full pl-10 pr-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400 shadow-inner"
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="text-[11px] text-slate-400 font-medium block mb-1">Email Address:</label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 absolute left-3.5 top-3 text-slate-500" />
-                  <input
-                    type="email"
-                    required
-                    value={authEmail}
-                    onChange={(e) => setAuthEmail(e.target.value)}
-                    placeholder="name@domain.com"
-                    className="w-full pl-10 pr-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400 shadow-inner"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[11px] text-slate-400 font-medium block mb-1">Password:</label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 absolute left-3.5 top-3 text-slate-500" />
-                  <input
-                    type="password"
-                    required
-                    value={authPassword}
-                    onChange={(e) => setAuthPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400 shadow-inner"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={authLoading}
-                className="w-full py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-black text-xs font-bold transition shadow-lg shadow-amber-500/10 disabled:opacity-50 mt-2 flex items-center justify-center space-x-1.5"
-              >
-                {authLoading ? (
-                  <RefreshCw className="w-4 h-4 animate-spin text-black" />
-                ) : (
-                  <span>{authMode === 'login' ? 'Sign In & Enter' : 'Create Free Account'}</span>
-                )}
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
+      <AuthScreen
+        authMode={authMode}
+        setAuthMode={setAuthMode}
+        authName={authName}
+        setAuthName={setAuthName}
+        authEmail={authEmail}
+        setAuthEmail={setAuthEmail}
+        authPassword={authPassword}
+        setAuthPassword={setAuthPassword}
+        authError={authError}
+        setAuthError={setAuthError}
+        authLoading={authLoading}
+        handleAuthSubmit={handleAuthSubmit}
+      />
     );
   }
 
@@ -595,116 +423,22 @@ export default function App() {
       {/* Toast Alert */}
       {feedbackMsg && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-full shadow-2xl text-xs flex items-center space-x-1.5">
-          <Check className="w-3.5 h-3.5 stroke-[3]" />
+          <Check className="w-3.5 h-3.5 stroke-3" />
           <span>{feedbackMsg}</span>
         </div>
       )}
 
       {/* Top Navbar */}
-      <header className="sticky top-0 z-40 bg-[#0c101d]/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          
-          {/* Brand Logo */}
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('discover')}>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-400 to-rose-500 flex items-center justify-center shadow-md shadow-amber-500/20">
-              <Film className="w-4 h-4 text-black stroke-[2.5]" />
-            </div>
-            <div className="flex items-center space-x-1.5">
-              <span className="font-extrabold text-base bg-gradient-to-r from-amber-200 to-rose-200 bg-clip-text text-transparent">
-                CineVault
-              </span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400 font-semibold border border-amber-500/20">
-                IMDb
-              </span>
-            </div>
-          </div>
-
-          {/* Desktop Central Navigation (Discover & My Albums) */}
-          <div className="hidden md:flex items-center space-x-2 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
-            <button
-              onClick={() => setActiveTab('discover')}
-              className={`px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition ${
-                activeTab === 'discover'
-                  ? 'bg-amber-400 text-black shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <Search className="w-3.5 h-3.5" />
-              <span>Discover</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('watchlist')}
-              className={`px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition ${
-                activeTab === 'watchlist'
-                  ? 'bg-amber-400 text-black shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <Bookmark className="w-3.5 h-3.5" />
-              <span>My Albums</span>
-              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                activeTab === 'watchlist' ? 'bg-black text-amber-400' : 'bg-slate-800 text-slate-300'
-              }`}>
-                {watchlist.length}
-              </span>
-            </button>
-          </div>
-
-          {/* Right Action Controls */}
-          <div className="flex items-center space-x-2.5">
-            {/* Desktop "+ Album" Action Button */}
-            <button
-              onClick={() => setShowNewShelfModal(true)}
-              className="hidden md:flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-slate-300 hover:text-white transition"
-            >
-              <FolderPlus className="w-3.5 h-3.5 text-indigo-400" />
-              <span>+ Album</span>
-            </button>
-
-            {/* Cloud Sync State */}
-            <div className="flex items-center space-x-1 px-2 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[10px]">
-              {syncStatus === 'synced' ? (
-                <>
-                  <Cloud className="w-3 h-3 text-emerald-400" />
-                  <span className="text-emerald-400 font-medium hidden sm:inline">Cloud</span>
-                </>
-              ) : syncStatus === 'saving' ? (
-                <>
-                  <RefreshCw className="w-3 h-3 text-amber-400 animate-spin" />
-                  <span className="text-amber-400 hidden sm:inline">Syncing</span>
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="w-3 h-3 text-slate-400" />
-                  <span className="text-slate-400 hidden sm:inline">Offline</span>
-                </>
-              )}
-            </div>
-
-            {/* Account Details Button */}
-            <button
-              onClick={() => setShowAccountModal(true)}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold text-amber-300 transition"
-              title="Account Details"
-            >
-              <User className="w-3.5 h-3.5" />
-              <span>Account</span>
-            </button>
-
-            {/* API Key Modal Button */}
-            <button
-              onClick={() => setShowKeyModal(true)}
-              className={`p-1.5 rounded-lg border transition ${
-                apiKey ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10' : 'border-slate-800 text-slate-400'
-              }`}
-              title="API Key"
-            >
-              <Key className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      </header>
+      <Navbar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        watchlistLength={watchlist.length}
+        setShowNewShelfModal={setShowNewShelfModal}
+        syncStatus={syncStatus}
+        setShowAccountModal={setShowAccountModal}
+        setShowKeyModal={setShowKeyModal}
+        apiKey={apiKey}
+      />
 
       {/* Main Container */}
       <main className="max-w-6xl mx-auto px-3.5 sm:px-6 pt-5">
@@ -1002,298 +736,56 @@ export default function App() {
         )}
       </main>
 
-      {/* Mobile Bottom Navigation (Shown only on small screens) */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-[#0b0e1a]/95 backdrop-blur-lg border-t border-slate-800 flex items-center justify-around py-2 px-4 md:hidden">
-        <button
-          onClick={() => setActiveTab('discover')}
-          className={`flex flex-col items-center space-y-1 ${activeTab === 'discover' ? 'text-amber-400' : 'text-slate-400'}`}
-        >
-          <Search className="w-5 h-5" />
-          <span className="text-[10px] font-medium">Discover</span>
-        </button>
+      {/* Mobile Bottom Navigation */}
+      <MobileNav
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        watchlistLength={watchlist.length}
+        setShowNewShelfModal={setShowNewShelfModal}
+        setShowAccountModal={setShowAccountModal}
+      />
 
-        <button
-          onClick={() => setActiveTab('watchlist')}
-          className={`flex flex-col items-center space-y-1 relative ${activeTab === 'watchlist' ? 'text-amber-400' : 'text-slate-400'}`}
-        >
-          <Bookmark className="w-5 h-5" />
-          <span className="text-[10px] font-medium">My Albums</span>
-          {watchlist.length > 0 && (
-            <span className="absolute -top-1 -right-2 bg-amber-400 text-black text-[9px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center">
-              {watchlist.length}
-            </span>
-          )}
-        </button>
-
-        <button
-          onClick={() => setShowNewShelfModal(true)}
-          className="flex flex-col items-center space-y-1 text-slate-400 hover:text-white"
-        >
-          <FolderPlus className="w-5 h-5 text-indigo-400" />
-          <span className="text-[10px] font-medium">+ Album</span>
-        </button>
-
-        <button
-          onClick={() => setShowAccountModal(true)}
-          className="flex flex-col items-center space-y-1 text-slate-400 hover:text-amber-400"
-        >
-          <User className="w-5 h-5" />
-          <span className="text-[10px] font-medium">Account</span>
-        </button>
-      </nav>
-
-      {/* ---------------- ACCOUNT DETAILS MODAL ---------------- */}
+      {/* Account Details Modal */}
       {showAccountModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4">
-          <div className="w-full sm:max-w-md bg-[#0f1426] border border-slate-800 rounded-t-3xl sm:rounded-2xl p-6 space-y-5 shadow-2xl">
-            <div className="flex justify-between items-center text-white">
-              <h3 className="font-extrabold text-base text-amber-400 flex items-center space-x-2">
-                <User className="w-5 h-5" />
-                <span>Account Profile</span>
-              </h3>
-              <button onClick={() => setShowAccountModal(false)} className="p-1 rounded-full bg-slate-800 text-slate-300">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800/80 space-y-3">
-              <div>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Name</span>
-                <p className="text-sm font-semibold text-white">
-                  {user.displayName || 'Movie Buff'}
-                </p>
-              </div>
-
-              <div>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Email Address</span>
-                <p className="text-sm font-mono text-slate-300">{user.email}</p>
-              </div>
-
-              <div>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Last Login</span>
-                <div className="flex items-center space-x-1.5 text-xs text-slate-400 mt-0.5">
-                  <Calendar className="w-3.5 h-3.5 text-amber-400" />
-                  <span>
-                    {user.metadata?.lastSignInTime 
-                      ? new Date(user.metadata.lastSignInTime).toLocaleString() 
-                      : 'Active Now'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
-                <span className="text-xs text-slate-400 flex items-center space-x-1">
-                  <MovieIcon className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Saved in Album</span>
-                </span>
-                <span className="text-2xl font-black text-white mt-1">{stats.total}</span>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
-                <span className="text-xs text-slate-400 flex items-center space-x-1">
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Already Seen</span>
-                </span>
-                <span className="text-2xl font-black text-white mt-1">{stats.watched}</span>
-              </div>
-            </div>
-
-            <button
-              onClick={handleLogout}
-              className="w-full py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-bold transition flex items-center justify-center space-x-2"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Log Out of CineVault</span>
-            </button>
-          </div>
-        </div>
+        <AccountModal
+          user={user}
+          stats={stats}
+          handleLogout={handleLogout}
+          setShowAccountModal={setShowAccountModal}
+        />
       )}
 
       {/* Movie Details Modal */}
       {inspectMovie && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4">
-          <div className="w-full sm:max-w-lg bg-[#0f1426] border border-slate-800 rounded-t-3xl sm:rounded-2xl shadow-2xl p-5 space-y-4 max-h-[85vh] overflow-y-auto">
-            <div className="flex justify-between items-start">
-              <div className="flex items-center space-x-2">
-                <span className="text-[10px] bg-amber-400 text-black font-extrabold px-1.5 py-0.5 rounded">
-                  ★ {inspectMovie.imdbRating}
-                </span>
-                {inspectMovie.rottenTomatoes && inspectMovie.rottenTomatoes !== 'N/A' && (
-                  <span className="text-[10px] bg-rose-500/20 text-rose-300 px-1.5 py-0.5 rounded">
-                    🍅 {inspectMovie.rottenTomatoes}
-                  </span>
-                )}
-              </div>
-              <button onClick={() => setInspectMovie(null)} className="p-1 rounded-full bg-slate-800 text-slate-300">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="flex gap-4">
-              <img
-                src={inspectMovie.poster}
-                alt={inspectMovie.title}
-                className="w-24 h-36 object-cover rounded-xl border border-slate-800 shrink-0"
-              />
-              <div className="space-y-1">
-                <h3 className="font-extrabold text-base text-white">{inspectMovie.title}</h3>
-                <p className="text-xs text-slate-400">{inspectMovie.year} • {inspectMovie.runtime}</p>
-                <div className="flex flex-wrap gap-1 pt-1">
-                  {inspectMovie.genre?.map(g => (
-                    <span key={g} className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full">
-                      {g}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <p className="text-xs text-slate-300 leading-relaxed">{inspectMovie.plot}</p>
-
-            <div className="text-[11px] bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1 text-slate-300">
-              <p><strong className="text-slate-500">Director:</strong> {inspectMovie.director}</p>
-              <p><strong className="text-slate-500">Cast:</strong> {inspectMovie.cast}</p>
-            </div>
-
-            {isInWatchlist(inspectMovie.id) && (
-              <div>
-                <label className="text-[11px] text-slate-400 block mb-1">Private Note:</label>
-                <textarea
-                  rows={2}
-                  placeholder="Notes, thoughts, or reminders..."
-                  value={watchlist.find(m => m.id === inspectMovie.id)?.userNotes || ''}
-                  onChange={(e) => handleUpdateEntry(inspectMovie.id, 'userNotes', e.target.value)}
-                  className="w-full p-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-amber-400"
-                />
-              </div>
-            )}
-
-            <div className="flex items-center justify-between pt-2">
-              <a
-                href={`https://www.imdb.com/title/${inspectMovie.id}/`}
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs text-amber-400 flex items-center space-x-1 font-bold"
-              >
-                <span>View on IMDb</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-
-              <button
-                onClick={() => {
-                  if (isInWatchlist(inspectMovie.id)) handleRemoveMovie(inspectMovie.id);
-                  else handleSaveMovie(inspectMovie);
-                }}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
-                  isInWatchlist(inspectMovie.id)
-                    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                    : 'bg-amber-400 text-black hover:bg-amber-300'
-                }`}
-              >
-                {isInWatchlist(inspectMovie.id) ? 'Remove from Album' : 'Add to Album'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <MovieInspectModal
+          inspectMovie={inspectMovie}
+          setInspectMovie={setInspectMovie}
+          isInWatchlist={isInWatchlist}
+          watchlist={watchlist}
+          handleUpdateEntry={handleUpdateEntry}
+          handleRemoveMovie={handleRemoveMovie}
+          handleSaveMovie={handleSaveMovie}
+        />
       )}
 
       {/* API Key Modal */}
       {showKeyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-sm bg-[#11162a] border border-slate-800 rounded-2xl p-5 space-y-3">
-            <div className="flex justify-between items-center text-white">
-              <h3 className="font-bold text-sm flex items-center space-x-1.5 text-amber-400">
-                <Key className="w-4 h-4" />
-                <span>IMDb / OMDb API Key</span>
-              </h3>
-              <button onClick={() => setShowKeyModal(false)}><X className="w-4 h-4 text-slate-400" /></button>
-            </div>
-
-            <p className="text-[11px] text-slate-300">
-              Get your free API key at{" "}
-              <a href="https://www.omdbapi.com/apikey.aspx" target="_blank" rel="noreferrer" className="text-amber-400 underline">
-                omdbapi.com
-              </a>{" "}
-              to search online movies directly.
-            </p>
-
-            <input
-              type="text"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value.trim())}
-              placeholder="e.g. 1a2b3c4d"
-              className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono text-xs focus:outline-none focus:border-amber-400"
-            />
-
-            <div className="flex justify-end space-x-2 pt-2">
-              <button
-                onClick={() => {
-                  setApiKey('');
-                  localStorage.removeItem('omdb_api_key');
-                  setShowKeyModal(false);
-                }}
-                className="px-3 py-1.5 text-xs text-slate-400"
-              >
-                Clear
-              </button>
-              <button
-                onClick={() => {
-                  localStorage.setItem('omdb_api_key', apiKey);
-                  setShowKeyModal(false);
-                  triggerToast('API Key Saved');
-                }}
-                className="px-4 py-1.5 rounded-lg bg-amber-400 text-black text-xs font-bold"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
+        <ApiKeyModal
+          apiKey={apiKey}
+          setApiKey={setApiKey}
+          setShowKeyModal={setShowKeyModal}
+          triggerToast={triggerToast}
+        />
       )}
 
       {/* New Shelf Modal */}
       {showNewShelfModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <form onSubmit={handleAddShelf} className="w-full max-w-sm bg-[#11162a] border border-slate-800 rounded-2xl p-5 space-y-4">
-            <div className="flex justify-between items-center text-white">
-              <h3 className="font-bold text-sm text-amber-400 flex items-center space-x-1.5">
-                <FolderPlus className="w-4 h-4" />
-                <span>New Movie Album</span>
-              </h3>
-              <button type="button" onClick={() => setShowNewShelfModal(false)}>
-                <X className="w-4 h-4 text-slate-400" />
-              </button>
-            </div>
-
-            <input
-              type="text"
-              value={newShelfName}
-              onChange={(e) => setNewShelfName(e.target.value)}
-              placeholder="e.g. Friday Thrillers, Classics..."
-              className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-amber-400"
-              autoFocus
-            />
-
-            <div className="flex justify-end space-x-2">
-              <button
-                type="button"
-                onClick={() => setShowNewShelfModal(false)}
-                className="px-3 py-1.5 text-xs text-slate-400"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={!newShelfName.trim()}
-                className="px-4 py-1.5 rounded-lg bg-amber-400 text-black text-xs font-bold disabled:opacity-50"
-              >
-                Create
-              </button>
-            </div>
-          </form>
-        </div>
+        <NewShelfModal
+          newShelfName={newShelfName}
+          setNewShelfName={setNewShelfName}
+          setShowNewShelfModal={setShowNewShelfModal}
+          handleAddShelf={handleAddShelf}
+        />
       )}
     </div>
   );
