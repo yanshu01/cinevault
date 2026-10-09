@@ -16,7 +16,7 @@ export default function AuthScreen({
   handleAuthSubmit
 }) {
   return (
-    <div className="min-h-screen bg-[#07090f] text-slate-100 flex flex-col  items-center px-4 py-8">
+    <div className="fixed inset-0 h-dvh w-screen overflow-hidden overscroll-none touch-none bg-[#07090f] text-slate-100 flex flex-col  items-center px-4 py-8">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-2">
           <div className="w-14 h-14 rounded-2xl bg-linear-to-tr from-amber-400 via-rose-500 to-indigo-600 flex items-center justify-center shadow-xl shadow-amber-500/20 mx-auto">
