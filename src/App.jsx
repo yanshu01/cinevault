@@ -25,6 +25,7 @@ import MovieSwipeDiscovery from './components/MovieSwipeDiscovery.jsx';
 
 import DiscoverView from './views/DiscoverView';
 import WatchlistView from './views/WatchlistView';
+import Recommendations from './components/Recommendations';
 
 import { useWatchlist } from './hooks/useWatchlist';
 import { useOmdbSearch } from './hooks/useOmdbSearch';
@@ -33,7 +34,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [authChecking, setAuthChecking] = useState(true);
 
-  // Active view: 'landing' (pure swipe) | 'discover' (grid/search) | 'watchlist'
+  // Active view: 'landing' | 'discover' | 'recommendations' | 'watchlist'
   const [activeTab, setActiveTab] = useState('landing');
 
   // Modals & Feedback
@@ -221,7 +222,7 @@ export default function App() {
     );
   }
 
-  // --- REGULAR APPLICATION VIEW (Navbar, MobileNav, Search, and Shelves) ---
+  // --- REGULAR APPLICATION VIEW (Navbar, MobileNav, Search, Shelves & Recommendations) ---
   return (
     <div className="min-h-screen bg-[#07090f] text-slate-100 font-sans pb-24 md:pb-10 selection:bg-amber-500 selection:text-black">
       {feedbackMsg && (
@@ -243,7 +244,7 @@ export default function App() {
       />
 
       <main className="max-w-6xl mx-auto px-3.5 sm:px-6 pt-5">
-        {activeTab === 'discover' ? (
+        {activeTab === 'discover' && (
           <DiscoverView
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
@@ -257,7 +258,18 @@ export default function App() {
             onRemoveMovie={handleRemoveMovie}
             onInspectMovie={setInspectMovie}
           />
-        ) : (
+        )}
+
+        {activeTab === 'recommendations' && (
+  <Recommendations
+    onNavigateToSwipe={() => setActiveTab('landing')}
+    onSaveToWatchlist={handleSaveMovie}
+    isInWatchlist={isInWatchlist}
+    apiKey={apiKey}
+  />
+)}
+
+        {activeTab === 'watchlist' && (
           <WatchlistView
             watchlist={watchlist}
             shelves={shelves}
