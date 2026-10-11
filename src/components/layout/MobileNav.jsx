@@ -10,13 +10,7 @@ export default function MobileNav({
 }) {
   return (
     <nav className="fixed bottom-0 inset-x-0 z-40 bg-[#0b0e1a]/95 backdrop-blur-lg border-t border-slate-800 flex items-center justify-around py-2 px-4 md:hidden">
-      <button
-        onClick={() => setActiveTab('discover')}
-        className={`flex flex-col items-center space-y-1 ${activeTab === 'discover' ? 'text-amber-400' : 'text-slate-400'}`}
-      >
-        <Search className="w-5 h-5" />
-        <span className="text-[10px] font-medium">Discover</span>
-      </button>
+      
 
       <button
         onClick={() => setActiveTab('watchlist')}

@@ -32,17 +32,7 @@ export default function Navbar({
 
         {/* Desktop Central Navigation (Discover & My Albums) */}
         <div className="hidden md:flex items-center space-x-2 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
-          <button
-            onClick={() => setActiveTab('discover')}
-            className={`px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition ${
-              activeTab === 'discover'
-                ? 'bg-amber-400 text-black shadow-md'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-            }`}
-          >
-            <Search className="w-3.5 h-3.5" />
-            <span>Discover</span>
-          </button>
+          
 
           <button
             onClick={() => setActiveTab('watchlist')}
