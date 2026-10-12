@@ -10,7 +10,7 @@ import {
 } from '../firebase';
 import { DEFAULT_ALBUMS } from '../data/preloadedMovies';
 
-export function useWatchlist(user, triggerToast, setApiKey) {
+export function useWatchlist(user, triggerToast, setApiKey, onRequestAuth) {
   const [watchlist, setWatchlist] = useState([]);
   const [shelves, setShelves] = useState(DEFAULT_ALBUMS || ['Weekend Binge', 'Favorites']);
   const [syncStatus, setSyncStatus] = useState('connecting');
@@ -54,47 +54,63 @@ export function useWatchlist(user, triggerToast, setApiKey) {
   }, [user, setApiKey]);
 
   const handleSaveMovie = async (movie, shelf = 'Weekend Binge') => {
+    // 1. Guard check: Block unauthenticated users
+    if (!user) {
+      triggerToast('Please sign in to add movies to your album');
+      if (onRequestAuth) {
+        onRequestAuth(); // Automatically opens the login modal
+      }
+      return false;
+    }
+
+    const movieId = String(movie.id || movie.imdbID || `movie_${Date.now()}`);
     const targetShelf = shelf === 'All' ? 'Weekend Binge' : (shelf || 'Weekend Binge');
+
     const payload = {
-      id: movie.id,
+      id: movieId,
       title: movie.title || 'Untitled',
-      year: movie.year || '2025',
+      year: String(movie.year || '2025'),
       genre: Array.isArray(movie.genre) ? movie.genre : [movie.genre || 'Cinema'],
       director: movie.director || 'N/A',
       cast: movie.cast || 'N/A',
       plot: movie.plot || '',
       poster: movie.poster || 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?w=600&auto=format&fit=crop&q=80',
-      imdbRating: movie.imdbRating || movie.rating || '7.5',
-      rottenTomatoes: movie.rottenTomatoes || '85%',
+      imdbRating: String(movie.imdbRating || movie.rating || '7.5'),
+      rottenTomatoes: String(movie.rottenTomatoes || 'N/A'),
       origin: movie.origin || movie.industry || 'Bollywood',
       runtime: movie.runtime || '120 min',
       status: movie.status || 'Want to Watch',
       shelf: targetShelf,
-      userRating: movie.userRating || 0,
+      userRating: Number(movie.userRating || 0),
       userNotes: movie.userNotes || '',
       dateAdded: new Date().toISOString()
     };
 
-    if (!user || isDemoFirebase || !db) {
-      const storageKey = user ? `cinevault_${user.uid}_watchlist` : 'cinevault_guest_watchlist';
+    // Demo/offline support for simulated accounts
+    if (isDemoFirebase || !db) {
+      const storageKey = `cinevault_${user.uid}_watchlist`;
       setWatchlist(prev => {
-        const next = prev.some(m => m.id === movie.id)
-          ? prev.map(m => m.id === movie.id ? { ...m, ...payload } : m)
+        const next = prev.some(m => m.id === movieId)
+          ? prev.map(m => m.id === movieId ? { ...m, ...payload } : m)
           : [...prev, payload];
         localStorage.setItem(storageKey, JSON.stringify(next));
         return next;
       });
       triggerToast(`Added to ${targetShelf}`);
-      return;
+      return true;
     }
 
     setSyncStatus('saving');
     try {
-      await setDoc(doc(db, 'users', user.uid, 'movies', movie.id), payload, { merge: true });
+      await setDoc(doc(db, 'users', user.uid, 'movies', movieId), payload, { merge: true });
       setSyncStatus('synced');
       triggerToast(`Added to ${targetShelf}`);
-    } catch {
+      return true;
+    } catch (error) {
+      console.error('Firestore Save Failed:', error);
       setSyncStatus('error');
+      triggerToast('Failed to save movie');
+      return false;
     }
   };
 

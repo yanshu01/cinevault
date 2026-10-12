@@ -73,7 +73,9 @@ export default function App() {
     handleRemoveMovie,
     handleAddShelf,
     isInWatchlist
-  } = useWatchlist(user, triggerToast, setApiKey);
+  } = useWatchlist(user, triggerToast, setApiKey,
+    () => setShowAccountModal(true)
+  );
 
   const {
     searchQuery,

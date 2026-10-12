@@ -161,43 +161,7 @@ export default function Recommendations({
       
       {/* 1. TOP SEARCH BAR */}
       <div className="bg-[#0e1322] border border-slate-800/80 rounded-3xl p-4 sm:p-5 shadow-2xl space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h2 className="text-sm sm:text-base font-bold text-white flex items-center space-x-2">
-              <Search className="w-4 h-4 text-amber-400" />
-              <span>Search IMDb & Rotten Tomatoes</span>
-            </h2>
-            <p className="text-[11px] text-slate-400">
-              Type any movie to explore cards & add them directly to your personal albums
-            </p>
-          </div>
-
-          {/* Database Toggle (IMDb vs Rotten Tomatoes) */}
-          <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 self-start sm:self-auto text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => setSearchSource('imdb')}
-              className={`px-3 py-1.5 rounded-lg transition ${
-                searchSource === 'imdb'
-                  ? 'bg-amber-400 text-black shadow'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              IMDb
-            </button>
-            <button
-              type="button"
-              onClick={() => setSearchSource('rotten')}
-              className={`px-3 py-1.5 rounded-lg transition ${
-                searchSource === 'rotten'
-                  ? 'bg-rose-500 text-white shadow'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              🍅 Rotten Tomatoes
-            </button>
-          </div>
-        </div>
+        
 
         {/* Search Input */}
         <div className="relative">
@@ -235,50 +199,22 @@ export default function Recommendations({
       {/* 2. SECTION HEADER */}
       <header className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="p-2.5 rounded-xl bg-amber-400/10 border border-amber-400/20 text-amber-400 shadow-lg shadow-amber-400/5">
-            {isSearchActive ? (
-              <Search className="w-5 h-5 stroke-[2.2]" />
-            ) : (
-              <Flame className="w-5 h-5 stroke-[2.2]" />
-            )}
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-              {isSearchActive
-                ? `Results for "${searchQuery}"`
-                : 'Top 10 Most Liked Movies'}
-            </h1>
-            <p className="text-xs text-slate-400">
-              {isSearchActive
-                ? 'Showing matching titles from online database'
-                : 'Curated leaderboard from community right-swipes'}
-            </p>
-          </div>
+          
+          
         </div>
 
         {/* Back / Reset button */}
         <div className="flex items-center space-x-2">
-          {isSearchActive ? (
-            <button
-              type="button"
-              onClick={handleClear}
-              className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-xs font-semibold hover:text-white transition"
-            >
-              Back to Top 10
-            </button>
-          ) : (
-            onNavigateToSwipe && (
-              <button
-                type="button"
-                onClick={onNavigateToSwipe}
-                className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-amber-300 text-xs font-bold hover:bg-slate-800 transition active:scale-95"
-              >
-                <Film className="w-3.5 h-3.5" />
-                <span>Swipe More</span>
-              </button>
-            )
-          )}
-        </div>
+  {isSearchActive && (
+    <button
+      type="button"
+      onClick={handleClear}
+      className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-xs font-semibold hover:text-white transition"
+    >
+      Back to Top 10
+    </button>
+  )}
+</div>
       </header>
 
       {/* 3. MAIN CARDS GRID */}
